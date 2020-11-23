@@ -62,7 +62,7 @@ We can overwrite `__free_hook` by creating a buffer at the last element of that 
 
 ### Solver
 
-[heap.py]
+[heap.py](heap.py)
 
 ## BabyShell
 
@@ -79,5 +79,3 @@ The main challenge is that it is difficult to do an arbitrary since the filesyst
 I asked for help [kcz146](https://twitter.com/kcz146), who is a linux-pro, and he immediately found that we could use nc and gave me a nice command: `cat | xargs -I{} printf '\x{}' | busybox nc localhost 4433 | hexdump -v -e '1/1 "X%02x\n"'`.
 
 So I wrote a proxy and solved it.
-
-[babyshell-proxy.py]
