@@ -62,7 +62,7 @@ We can overwrite `__free_hook` by creating a buffer at the last element of that 
 
 ### Solver
 
-[heap.py](heap.py)
+[heap_hop.py](heap_hop.py)
 
 ## BabyShell
 
