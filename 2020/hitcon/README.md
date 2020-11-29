@@ -25,7 +25,7 @@ ret
 ```
 
 Then, read a byte of cookie and call the corresponding function.
-By using this bl, you can retrive the cookie after the mid-check.
+By using this bl, you can retrieve the cookie after the mid-check.
 
 [tenet.py](tenet.py)
 
