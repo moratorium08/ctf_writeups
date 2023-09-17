@@ -1,6 +1,6 @@
 # SECCON CTF 2023 Quals
 
-## selfcet (pwn)
+## [selfcet (pwn)](selfcet/)
 
 CET written by hands
 
@@ -41,7 +41,7 @@ My strategy is to leak the libc address first by `warn`, which is near from `thr
 PoC: [solve.py](selfcet/solve.py)
 
 
-## rop-2.35 (pwn)
+## [rop-2.35 (pwn)](rop-2.35)
 
 The source program is very small:
 ```c
@@ -74,7 +74,7 @@ With those in mind, what we have to do is just loads `"/bin/sh"` to somewhere in
 
 PoC: [solver.py](rop-2.35/solve.py)
 
-## DataStore1 (pwn)
+## [DataStore1 (pwn)](DataStore1)
 
 A heap chall that requires you to do heap feng shui, just that.
 
@@ -134,7 +134,7 @@ PoC: [solve.py](rop-2.35/solve.py)
 
 
 
-## readme 2023 (misc)
+## [readme 2023 (misc)](readme2023)
 
 A simple "readme" challenge in Linux.
 
