@@ -25,7 +25,7 @@ def readme_generator(ctfname, challenges):
     return template.replace(ctf_name_tag, ctfname).replace(challenges_tag, challenges)
 
 def gen_ctf_readme(ctfdir):
-    print("[+] processing {ctfdir}")
+    print(f"[+] processing {ctfdir}")
     files = os.listdir(ctfdir)
     ctfname = os.path.basename(ctfdir)
     challenges = []
