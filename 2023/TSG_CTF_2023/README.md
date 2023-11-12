@@ -7,7 +7,7 @@ Thank you for your participation in TSG CTF 2023! This post gives you my writeup
 - bypy (pwnable)
 - Conduit (reversing)
 
-Note that the writeup in this repo is a temporal one, and the final version will be published in the official archive repository in [https://github.com/tsg-ut/](https://github.com/tsg-ut).
+Note that the writeup in this repo is a temporary one, and the final version will be published in the official archive repository in [https://github.com/tsg-ut/](https://github.com/tsg-ut).
 
 
 ## sloader
@@ -37,7 +37,7 @@ However, the server executes the binary by using [`sloader`](https://github.com/
 
 ### Solution
 
-If you execute the binary with sloader, you might notice that even though the binary says it's PIE, the address of the binary loaded is always same, which often happens on some non-standard environments.
+If you execute the binary with sloader, you might notice that even though the binary says it's PIE, the address of the binary loaded is always the same, which often happens in some non-standard environments.
 
 ```
 gef> vmmap
@@ -83,7 +83,7 @@ https://github.com/akawashiro/sloader/blob/0744fde8deab2c3269c11e1075d13c5cc80a8
 0x0000000010001000 0x0000000010263000 0x0000000000262000 0x0000000000001000 r-x /home/ubuntu/tsgctf4/pwn/sloader/src/sloader  <-  $rcx, $rip
 ```
 
-Which means, we don't have to leak any address to bypass ALSR.
+This means we don't have to leak any address to bypass ALSR.
 
 Now the problem is how do I bypass the stack canary? If you try to input a large buffer (like "A" * 100) to it, you will notice that you can overwrite the return address!
 
@@ -131,7 +131,7 @@ Final payload is here:
 ## 👻 (pwn, med, 3 solves)
 
 
-#### Problem Statement
+### Problem Statement
 ```
 Ghost state is useful for proving some invariants on programs 👻🎃
 
@@ -143,7 +143,7 @@ nc 35.187.211.114 40007
 
 ### Problem Setting
 
-You are given an user-land program written in Rust that utilize a strange data structure `BrandedVec`. The application itself is very simple menu application where you can add notes, remove notes, modify notes, "pin" notes, etc.
+You are given a user-land program written in Rust that utilizes a strange data structure `BrandedVec`. The application itself is a simple menu application where you can add notes, remove notes, modify notes, "pin" notes, etc.
 
 ```
 $ nc localhost 40007
@@ -191,7 +191,7 @@ fn main() {
 }
 ```
 
-This is a main function, and loops until `twitter.handler()` returns `false`. I also picked some functionalies of `Twitter` as follows:
+This is a main function, and loops until `twitter.handler()` returns `false`. I also picked some functionalities of `Twitter` as follows:
 ```rust
 
 struct Twitter<'id> {
@@ -235,7 +235,7 @@ impl<'id> Twitter<'id> {
 
 Let us move to talking about how the data structures are designed and implemented. We first see the original implementation of `BrandedVec` and why it's considered to be sound, then look at the modification to it.
 
-Since Rust always bound-checks accesses to a vector, within the safe world of Rust, OOB accesses (unless their interfaces are unsound) always causes a panic. Basically, proving safety of index accesses is a difficult problem (undecidable problem), but sometimes we can easily prove the safety. Consider the following program:
+Since Rust always bound-checks accesses to a vector, within the safe world of Rust, OOB accesses (unless their interfaces are unsound) always cause a panic. Basically, proving the safety of index accesses is a difficult problem (undecidable problem), but sometimes we can easily prove the safety. Consider the following program:
 
 ```rust
 let v = vec![1, 2, 3];
@@ -252,15 +252,15 @@ println!("{}", x + y + z);
 `BrandedVec` aims to tackle this problem. Given a `BrandedVec` `v`, their APIs provide with us
 
 - Boundary checked indices `BrandedIndex` for v
-- Simple vector manipluations like insert / read / write (/ iter)
+- Simple vector manipulations like insert / read / write (/ iter)
 
-`BrandedIndex` can understand which vector do they belong to; i.e., given two `BrandedVec`s v and w, and `BrandedIndex` i for v, you can access the i-th element of v without any boundary-checks, but cannot use i to access the i-th element of w. This is guaranteed by <strong>the life type system of Rust</strong>; therefore, we can find the invalid use of `BrandedIndex` <strong>statically</strong>. Cool.
-If you are interested in the further detail, you can refer to the Ghost Cell paper [[Yanovski+ ICFP21]](https://dl.acm.org/doi/10.1145/3473597). ((Have you ever heard of Ghost Cell in Rust? This mechanism is the basis for achieving the data structure.))
+`BrandedIndex` can understand which vector they belong to; i.e., given two `BrandedVec`s v and w, and `BrandedIndex` i for v, you can access the i-th element of v without any boundary-checks, but cannot use i to access the i-th element of w. This is guaranteed by <strong>the life type system of Rust</strong>; therefore, we can find the invalid use of `BrandedIndex` <strong>statically</strong>. Cool.
+If you are interested in further details, you can refer to the Ghost Cell paper [[Yanovski+ ICFP21]](https://dl.acm.org/doi/10.1145/3473597). ((Have you ever heard of Ghost Cell in Rust? This mechanism is the basis for achieving the data structure.))
 
 
 ### Implementation of BrandedVec
 
-Not interested in the theory? OK. Let me talk about how it's implemented. `BrandedVec` is in fact just a vector that is defined as
+Not interested in the theory? OK. Let me talk about how it's implemented. `BrandedVec` is in fact, just a vector that is defined as
 ```rust
 #[derive(Clone, Copy, Default)]
 struct InvariantLifetime<'id>(PhantomData<*mut &'id ()>);
@@ -317,12 +317,12 @@ struct BrandedVec<'id, T> {
     }
 ```
 
-Focus on `get_index`. This methods returns BrandedIndex when `index` is in the vector; otherwise, it returns None. Since `BrandedVec` does not shrink, once `index` is proven to be in the vector, the access with the index to the vector is always safe in the future.
+Focus on `get_index`. This method returns BrandedIndex when `index` is in the vector; otherwise, it returns None. Since `BrandedVec` does not shrink, once `index` is proven to be in the vector, the access with the index to the vector is always safe in the future.
 
 
 ### Patch to the `BrandedVec`
 
-Now let us see the patch to this data structure. First, we introduce a new interface `pop` and patched `get_index` so that it memorizes the maximum index with which `self` was accessed so far. In `pop` method, the vector pops only when the length of the vector is greater than `self.max_index + 1`. This can be justified because for any `BrandedIndex` `bi` that has been published so far, it does not point to the element that is to be popped out.
+Now let us see the patch to this data structure. First, we introduce a new interface, `pop`, and patched `get_index` so that it memorizes the maximum index with which `self` was accessed so far. In `pop` method, the vector pops only when the length of the vector is greater than `self.max_index + 1`. This can be justified because any `BrandedIndex` `bi` that has been published so far does not point to the element that is to be popped out.
 Correct, isn't it? I think so.
 
 ```rust
@@ -349,7 +349,7 @@ Correct, isn't it? I think so.
     }
 ```
 
-Another patch I introduced is the index manipulations with `+` and `-` operator.
+Another patch I introduced is the index manipulations with the `+` and `-` operators.
 ```rust
 
 impl<'id> std::ops::Sub<usize> for BrandedIndex<'id> {
@@ -386,7 +386,7 @@ You may notice this `Sub` is dangerous if integer overflow happens. To mitigate 
 However, combined with `pop` operation that we newly introduced, `BrandedVec` is still unsafe. For example,
 ```rust
 // Assume v is BrandedVec [1,2,3], max_index = 0
-let idx = v.get_index(1).unwarp(); // max_index = 1
+let idx = v.get_index(1).unwrap(); // max_index = 1
 let idx2 = idx - 0xffffffffffffffffu64
 v.pop(); // max_index = 1, so 3 is popped
 v.get(idx2) // UAF!
@@ -398,7 +398,7 @@ Note that the binary is compiled with `--release` flag, so the integer overflow 
 
 If you notice what happens, this challenge is a simple heap feng-shui challenge against a Rust binary. You have to be aware of the structure of `String` and `Vec`, but this is almost similar to the mechanism that can be seen in other languages like C++'s standard library.
 
-My starategy is to
+My strategy is to
 1. leak a heap address and a libc address by UAF read
 2. create a fake chunk just above the Vec that holds tweets
 3. overwrite tweets vector to read arbitrary addresses, which leads to reading `environ` in libc
@@ -409,7 +409,7 @@ Since String and some other functionalities in Rust can allocate heap buffers in
 ## bypy　(pwn, hard, 4 solves)
 
 ```
-Another Python sandbox? This time you have to pwn python bytecode interpreter. Can you get out of the sandbox?
+Another Python sandbox? This time, you have to pwn python bytecode interpreter. Can you get out of the sandbox?
 
 nc 35.187.211.114 40003
 ```
@@ -469,19 +469,19 @@ def main():
 main()
 ```
 
-This script just takes a bytecode and executes it. Note that if the byte code contains constants, variable names, or other stuffs, the script just exits without executing the bytecode.
+This script just takes a bytecode and executes it. Note that if the byte code contains constants, variable names, or other stuff, the script just exits without executing the bytecode.
 
-So this challenge asks you that "can you pwn bytecode interpreters?"
+So this challenge asks you "can you pwn bytecode interpreters?"
 
 ### Approach to Pwn
 
-There is a huge attack surface, so there should be various ways to pwn this interpreter. Note that I think the python bytecode sandbox interpreter is complete in terms of the specification, you have to use some "undefined behavior" like out of bounds access.
-[Satoooon](https://discord.com/channels/546339917459095552/1165469713720152124/1170639277076516925) exploited `LOAD_FAST`'s out of bounds access, which leads to obtaining `exec` functions and `src` variable in the stack utilized by the bytecode executed prior to our bytecode.
+There is a huge attack surface, so there should be various ways to pwn this interpreter. Note that I think the Python bytecode sandbox interpreter is complete in terms of the specification; you have to use some "undefined behavior" like out-of-bounds access.
+[Satoooon](https://discord.com/channels/546339917459095552/1165469713720152124/1170639277076516925) exploited `LOAD_FAST`'s out-of-bounds access, which leads to obtaining `exec` functions and `src` variable in the stack utilized by the bytecode executed prior to our bytecode.
 
-I exploited `POP` operation, which can copy an object from the stack below. This does not check the boundary of the stack, you can just get an object from the stack-frame in the main function.
+I exploited `POP` operation, which can copy an object from the stack below. This does not check the boundary of the stack; you can just get an object from the stack frame in the main function.
 In this way,  you can obtain the string in `src`, `b64decode` function and `loads` function.
 
-Another important thing is that Python's `marshal.loads` works correctly even when there is some redundant bytes not to be read at the end of the byte. For example, the following snippet correctly works:
+Another important thing is that Python's `marshal.loads` works correctly even when there are some redundant bytes not to be read at the end of the byte. For example, the following snippet correctly works:
 ```py
 >>> import marshal
 >>> data = marshal.dumps(b"ABCD")
@@ -489,12 +489,12 @@ Another important thing is that Python's `marshal.loads` works correctly even wh
 b'ABCD'
 ```
 
-Therefore, you can attach some another data at the end of the source code we will send.
+Therefore, you can attach some other data at the end of the source code we will send.
 
 Wrapping up everything, what we want to do is `make_function(loads(b64decode(src[a:])))()` where `a` is the actual length of the (first) bytecode object.
 
 ## Conduit (rev, med, 2 solves)
 
-This is a simple bytecode reversing challenge.
+This is a simple bytecode-reversing challenge.
 You will find that the binary loads the internal bytecodes for regex library. What you have to do is to retrieve the bytecodes, parse the data, and finally search for the string that the automaton accepts by using depth-first search or something.
 
