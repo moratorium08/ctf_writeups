@@ -372,7 +372,7 @@ Assume that we have BrandedIndex `i` which points to `index`-th element of a vec
 
 Compared with subtraction, addition should be dangerous, so the operation just returns an unproved index.
 
-## Bug
+### Bug
 
 You may notice this `Sub` is dangerous if integer overflow happens. To mitigate tha situation, we introduced the following `satity_check` every time `Sub` operation happens so that we can make sure that the resulting index is between [0, v.len()):
 ```rust
