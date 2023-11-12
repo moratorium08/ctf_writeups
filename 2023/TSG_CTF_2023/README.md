@@ -7,6 +7,7 @@ Thank you for your participation in TSG CTF 2023! This post gives you my writeup
 - bypy (pwnable)
 - Conduit (reversing)
 
+Note that the writeup in this repo is a temporal one, and the final version will be published in the official archive repository in [https://github.com/tsg-ut/](https://github.com/tsg-ut).
 
 
 ## sloader
@@ -109,7 +110,7 @@ payload = padding + b''.join(map(p64, payload))
 
 ```
 
-Why? You don't have to understand why and just do ROP, but let us see what happens. If you go through the source code of sloader, you may notice there is a mapping between the symbols of libc and actual implementations [here](https://github.com/akawashiro/sloader/blob/master/libc_mapping.cc). And the implementation for `stack_chk_fail` is 
+Why? You don't have to understand why and just do ROP, but let us see what happens. If you go through the source code of sloader, you may notice there is a mapping between the symbols of libc and actual implementations [here](https://github.com/akawashiro/sloader/blob/master/libc_mapping.cc). And the implementation for `stack_chk_fail` is
 
 ```
 #define DEFINE_DUMMY_FUN(name) \
@@ -125,7 +126,7 @@ DEFINE_DUMMY_FUN(__stack_chk_fail)
 
 `stack_chk_fail` does nothing other than return, so you can freely overwrite the stack canary!
 
-Final payload is here: 
+Final payload is here:
 
 ## 👻 (pwn, med, 3 solves)
 
@@ -228,7 +229,7 @@ impl<'id> Twitter<'id> {
         assert!(self.sanity_check());
     }
 ```
-`post_tweet` creates a new tweet, `undo_tweet` seems to pop the latest tweet, `move_pin_tweet` can move the current pinned tweet to another one. To manage tweets and pinned tweets, this service utilizes strange data structures: `BrandedVec` and `BrandedIndex`. Now the question is what are they? 
+`post_tweet` creates a new tweet, `undo_tweet` seems to pop the latest tweet, `move_pin_tweet` can move the current pinned tweet to another one. To manage tweets and pinned tweets, this service utilizes strange data structures: `BrandedVec` and `BrandedIndex`. Now the question is what are they?
 
 ### Ghost State
 
@@ -240,11 +241,11 @@ Since Rust always bound-checks accesses to a vector, within the safe world of Ru
 let v = vec![1, 2, 3];
 let w = vec![1];
 let idx = 2;
-let x = v[idx]; 
+let x = v[idx];
 // Wish to remove the boundary check this time since we already know it's safe.
-let y = v[idx]; 
+let y = v[idx];
 // but we don't want to remove the boundary check for the following
-let z = w[idx]; 
+let z = w[idx];
 println!("{}", x + y + z);
 ```
 
@@ -259,7 +260,7 @@ If you are interested in the further detail, you can refer to the Ghost Cell pap
 
 ### Implementation of BrandedVec
 
-Not interested in the theory? OK. Let me talk about how it's implemented. `BrandedVec` is in fact just a vector that is defined as 
+Not interested in the theory? OK. Let me talk about how it's implemented. `BrandedVec` is in fact just a vector that is defined as
 ```rust
 #[derive(Clone, Copy, Default)]
 struct InvariantLifetime<'id>(PhantomData<*mut &'id ()>);
@@ -271,7 +272,7 @@ struct BrandedVec<'id, T> {
 ```
 (The original source for `BrandedVec` is taken from [here](https://gitlab.mpi-sws.org/FP/ghostcell/-/blob/134581ab18072528de50ac67c7f7ab89face9671/ghostcell/examples/branded_vec.rs), which is a PoC repository for [[Yanovski+ ICFP21]](https://dl.acm.org/doi/10.1145/3473597))
 
-`InvariantLifetime<'id'>` is a tag for identifying vectors, and the data itself is contained in `inner`. 
+`InvariantLifetime<'id'>` is a tag for identifying vectors, and the data itself is contained in `inner`.
 `BrandedVec` has the following interfaces:
 
 ```
@@ -321,7 +322,7 @@ Focus on `get_index`. This methods returns BrandedIndex when `index` is in the v
 
 ### Patch to the `BrandedVec`
 
-Now let us see the patch to this data structure. First, we introduce a new interface `pop` and patched `get_index` so that it memorizes the maximum index with which `self` was accessed so far. In `pop` method, the vector pops only when the length of the vector is greater than `self.max_index + 1`. This can be justified because for any `BrandedIndex` `bi` that has been published so far, it does not point to the element that is to be popped out. 
+Now let us see the patch to this data structure. First, we introduce a new interface `pop` and patched `get_index` so that it memorizes the maximum index with which `self` was accessed so far. In `pop` method, the vector pops only when the length of the vector is greater than `self.max_index + 1`. This can be justified because for any `BrandedIndex` `bi` that has been published so far, it does not point to the element that is to be popped out.
 Correct, isn't it? I think so.
 
 ```rust
@@ -348,7 +349,7 @@ Correct, isn't it? I think so.
     }
 ```
 
-Another patch I introduced is the index manipulations with `+` and `-` operator. 
+Another patch I introduced is the index manipulations with `+` and `-` operator.
 ```rust
 
 impl<'id> std::ops::Sub<usize> for BrandedIndex<'id> {
@@ -368,7 +369,7 @@ impl<'id> std::ops::Add<usize> for BrandedIndex<'id> {
     }
 }
 ```
-Assume that we have BrandedIndex `i` which points to `index`-th element of a vector `v`. Since we have `i`, the length of `v` is greater than or equal to `i`. Therefore, we can safely say that `i - n` is also safe. Isn't it? 
+Assume that we have BrandedIndex `i` which points to `index`-th element of a vector `v`. Since we have `i`, the length of `v` is greater than or equal to `i`. Therefore, we can safely say that `i - n` is also safe. Isn't it?
 
 Compared with subtraction, addition should be dangerous, so the operation just returns an unproved index.
 
@@ -397,7 +398,7 @@ Note that the binary is compiled with `--release` flag, so the integer overflow 
 
 If you notice what happens, this challenge is a simple heap feng-shui challenge against a Rust binary. You have to be aware of the structure of `String` and `Vec`, but this is almost similar to the mechanism that can be seen in other languages like C++'s standard library.
 
-My starategy is to 
+My starategy is to
 1. leak a heap address and a libc address by UAF read
 2. create a fake chunk just above the Vec that holds tweets
 3. overwrite tweets vector to read arbitrary addresses, which leads to reading `environ` in libc
@@ -478,7 +479,7 @@ There is a huge attack surface, so there should be various ways to pwn this inte
 [Satoooon](https://discord.com/channels/546339917459095552/1165469713720152124/1170639277076516925) exploited `LOAD_FAST`'s out of bounds access, which leads to obtaining `exec` functions and `src` variable in the stack utilized by the bytecode executed prior to our bytecode.
 
 I exploited `POP` operation, which can copy an object from the stack below. This does not check the boundary of the stack, you can just get an object from the stack-frame in the main function.
-In this way,  you can obtain the string in `src`, `b64decode` function and `loads` function. 
+In this way,  you can obtain the string in `src`, `b64decode` function and `loads` function.
 
 Another important thing is that Python's `marshal.loads` works correctly even when there is some redundant bytes not to be read at the end of the byte. For example, the following snippet correctly works:
 ```py
@@ -494,6 +495,6 @@ Wrapping up everything, what we want to do is `make_function(loads(b64decode(src
 
 ## Conduit (rev, med, 2 solves)
 
-This is a simple bytecode reversing challenge. 
+This is a simple bytecode reversing challenge.
 You will find that the binary loads the internal bytecodes for regex library. What you have to do is to retrieve the bytecodes, parse the data, and finally search for the string that the automaton accepts by using depth-first search or something.
 
