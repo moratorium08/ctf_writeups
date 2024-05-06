@@ -2,6 +2,9 @@
 
 This repo contains some of my writeups that I participated in....
 
+## 2024
+
+- [DEFCON Quals](2024/defcon_q)
 
 ## 2023
 
