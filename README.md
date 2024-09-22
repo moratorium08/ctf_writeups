@@ -5,6 +5,9 @@ This repo contains some of my writeups that I participated in....
 ## 2024
 
 - [DEFCON Quals](2024/defcon_q)
+- [ctf4b](2024/ctf4b)
+- [alpacahack round 1](2024/alpacahack_1)
+- [ierae CTF](2024/ierae)
 
 ## 2023
 
