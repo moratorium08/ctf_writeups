@@ -1,4 +1,13 @@
-## SQLite of Hand (co-authored with [mikit](https://x.com/m1kit))
+Thank you for your participation in TSG CTF 2024! This post gives you my writeups for the challenges that I have (co-)authored:
+
+- SQLite of Hand (Pwn, co-author: [mikit](https://x.com/m1kit))
+- Warmup SQLite (Rev, co-author: [mikit](https://x.com/m1kit))
+- H* (Misc)
+- Cached File Viewer (Misc, co-author: [azaika](https://x.com/azaika_))
+
+Note that the writeups in this repo is a temporary one, and the final version will be published in the official archive repository in https://github.com/tsg-ut/.
+
+## SQLite of Hand (co-authored with [mikit](https://x.com/m1kit)) [Pwn, 4 solves]
 
 Did you know that SQLite3 compiles an SQL query to an internal bytecode and executes it by its bytecode interpreter? (c.f. https://www.hwaci.com/sw/sqlite/arch.html) The situation is quite similar to CPython and other interpreters. There have been numerous exploitation challenges targeting bytecode engines, and this challenge is another example of them.
 
