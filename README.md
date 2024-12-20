@@ -8,6 +8,7 @@ This repo contains some of my writeups that I participated in....
 - [ctf4b](2024/ctf4b)
 - [alpacahack round 1](2024/alpacahack_1)
 - [ierae CTF](2024/ierae)
+- [TSG CTF 2024](2024/tsgctf)
 
 ## 2023
 
